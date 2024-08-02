@@ -110,6 +110,7 @@ fn main() {
     ];
 
     for i in 0..program.len() {
+        println!("\n{}", inst_type_as_string(program[i].itype.clone()));
         let err: Err = osvm_execute_inst(osvm, program[i].clone());
         if err != Err::ErrOK {
             eprintln!("Err: {}", err_as_string(err));
