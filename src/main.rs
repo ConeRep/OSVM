@@ -3,7 +3,7 @@ use instructions::*;
 mod error;
 use error::*;
 
-use std::{process::exit, usize, vec};
+use std::{os, process::exit, usize, vec};
 
 const OSVM_STACK_CAPACITY: usize = 1024;
 const OSVM_PROGRAM_CAPACITY: usize = 1024;
@@ -98,9 +98,67 @@ fn osvm_execute_inst(osvm: &mut OSVM) -> Err {
         InstType::Jump => {
             osvm.ip = inst.operand as usize;
         }
+        InstType::JumpIf => {
+            if osvm.stack.len() < 1 {
+                return Err::ErrStackUnderflow;
+            }
+
+            let a = osvm.stack.pop();
+
+            if a.is_some() {
+                osvm.ip = inst.operand as usize;
+            } else {
+                osvm.ip += 1;
+            }
+
+        }
+        InstType::Equal => {
+            if osvm.stack.len() < 2 {
+                return Err::ErrStackUnderflow
+            }
+
+            let a = osvm.stack.pop();
+            let b = osvm.stack.pop();
+
+            let new_num = match (a, b) {
+                (Some(x), Some(y)) => Some(y == x),
+                _ => None,
+            };
+
+            osvm.stack.push(new_num.unwrap() as usize);
+            osvm.ip += 1;
+        }
+        InstType::Dupl => {
+            if osvm.stack.len() >= OSVM_STACK_CAPACITY {
+                return Err::ErrStackOverflow;
+            }
+        
+            if osvm.stack.len() == 0 {
+                return Err::ErrStackUnderflow;
+            }
+        
+            if inst.operand as usize >= osvm.stack.len() {
+                return Err::ErrIllegalOperand;
+            }
+        
+            let index = osvm.stack.len() - 1 - inst.operand as usize;
+            let value_to_duplicate = osvm.stack[index];
+        
+            osvm.stack.push(value_to_duplicate);
+            osvm.ip += 1;
+        }
         InstType::Halt => {
             osvm.ip = 0;
             osvm.halt = true;
+        }
+
+        InstType::PrintDebug => {
+            if osvm.stack.len() < 1 {
+                return Err::ErrStackUnderflow;
+            }
+
+            println!("{:?}", osvm.stack.pop());
+            osvm.ip += 1;
         }
         _ => return Err::ErrIllegalInst
     }
@@ -135,30 +193,23 @@ fn main() {
     };
 
     let program: Vec<Inst> =  vec![
-        inst_push(69),
-        inst_push(420),
+        inst_push(0),
+        inst_push(1),
+        inst_dupl(1),
+        inst_dupl(1),
         inst_plus(),
-        inst_push(420),
-        inst_push(69),
-        inst_minus(),
-        inst_push(82),
-        inst_push(300),
-        inst_mult(),
-        inst_push(20),
-        inst_push(10),
-        inst_div(),
-        inst_jmp(9),
+        inst_jmp(2),
         inst_halt()
     ];
 
     osvm_load_program_from_memory(osvm, &program);
 
-    while !osvm.halt {
+    for _i in 0..69 {
         let err: Err = osvm_execute_inst(osvm);
-        osvm_dump_stack(osvm);
         if err != Err::ErrOK {
             eprintln!("Err: {}", err_as_string(err));
             exit(1);
         }
     }
+    osvm_dump_stack(osvm);
 }

@@ -11,7 +11,13 @@ pub enum InstType {
 
     // Keywords
     Jump,
+    JumpIf,
+    Equal,
+    Dupl,
     Halt,
+
+    // Debug
+    PrintDebug,
 }
 
 #[derive(Clone, Copy)]
@@ -28,7 +34,12 @@ pub fn inst_type_as_string(inst_type: InstType) -> String {
         InstType::Mult => return "Mult".to_string(),
         InstType::Div => return "Div".to_string(),
         InstType::Jump => return "Jump".to_string(),
+        InstType::JumpIf => return "JumpIf".to_string(),
+        InstType::Dupl => return "Dupl".to_string(),
+        InstType::Equal => return "Equal".to_string(),
         InstType::Halt => return "Halt".to_string(),
+
+        InstType::PrintDebug => return "PrintDebug".to_string(),
         _ => {
             assert!(false, "inst_type_as_string: Unreachable");
             return "Unreachable".to_string()
@@ -45,4 +56,9 @@ pub fn inst_div() -> Inst { Inst { itype: InstType::Div, operand: 0 } }
 
 // Keywords
 pub fn inst_jmp(addr: Word) -> Inst { Inst { itype: InstType::Jump, operand: addr } }
+pub fn inst_jmp_if(addr: Word) -> Inst { Inst { itype: InstType::JumpIf, operand: addr } }
+pub fn inst_dupl(value: Word) -> Inst { Inst { itype: InstType::Dupl, operand: value } }
 pub fn inst_halt() -> Inst { Inst { itype: InstType::Halt, operand: 0 } }
+
+// Debug
+pub fn inst_print_debug() -> Inst { Inst { itype: InstType::PrintDebug, operand: 0 } }
