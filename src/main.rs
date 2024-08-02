@@ -1,41 +1,15 @@
+mod instructions;
+use instructions::*;
 mod error;
-use std::{process::exit, usize, vec};
-
 use error::*;
 
-const OSVM_STACK_CAPACITY: usize = 1024;
+use std::{process::exit, usize, vec};
 
-type Word = i64;
+const OSVM_STACK_CAPACITY: usize = 1024;
 
 #[derive(Clone)]
 struct OSVM {
     stack: Vec<usize>,
-}
-
-#[derive(Clone)]
-enum InstType {
-    Push,
-    Plus,
-}
-
-#[derive(Clone)]
-struct Inst {
-    itype: InstType,
-    operand: Word,
-}
-
-fn inst_push(value: Word) -> Inst {
-    Inst {
-        itype: InstType::Push,
-        operand: value,
-    }
-}
-
-fn inst_plus() -> Inst {
-    Inst {
-        itype: InstType::Plus,
-        operand: 0
-    }
 }
 
 fn osvm_execute_inst(osvm: &mut OSVM, inst: Inst) -> Err {
