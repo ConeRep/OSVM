@@ -110,19 +110,18 @@ fn main() {
         inst_push(82),
         inst_push(300),
         inst_mult(),
+        inst_push(20),
         inst_push(10),
-        inst_push(0),
         inst_div(),
     ];
 
     for i in 0..program.len() {
         println!("\n{}", inst_type_as_string(program[i].itype.clone()));
         let err: Err = osvm_execute_inst(osvm, program[i].clone());
+        osvm_dump(osvm);
         if err != Err::ErrOK {
             eprintln!("Err: {}", err_as_string(err));
-            osvm_dump(osvm);
             exit(1);
         }
-        osvm_dump(osvm);
     }
 }
