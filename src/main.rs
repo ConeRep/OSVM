@@ -27,7 +27,46 @@ fn osvm_execute_inst(osvm: &mut OSVM, inst: Inst) -> Err {
             let a = osvm.stack.pop();
             let b = osvm.stack.pop();
             let add = match (a, b) {
-                (Some(x), Some(y)) => Some(x + y),
+                (Some(x), Some(y)) => Some(y + x),
+                _ => None,
+            };
+
+            osvm.stack.push(add.unwrap());
+        }
+        InstType::Minus => {
+            if osvm.stack.len() < 2 {
+                return Err::ErrStackUnderflow
+            }
+            let a = osvm.stack.pop();
+            let b = osvm.stack.pop();
+            let add = match (a, b) {
+                (Some(x), Some(y)) => Some(y - x),
+                _ => None,
+            };
+
+            osvm.stack.push(add.unwrap());
+        }
+        InstType::Mult => {
+            if osvm.stack.len() < 2 {
+                return Err::ErrStackUnderflow
+            }
+            let a = osvm.stack.pop();
+            let b = osvm.stack.pop();
+            let add = match (a, b) {
+                (Some(x), Some(y)) => Some(y * x),
+                _ => None,
+            };
+
+            osvm.stack.push(add.unwrap());
+        }
+        InstType::Div => {
+            if osvm.stack.len() < 2 {
+                return Err::ErrStackUnderflow
+            }
+            let a = osvm.stack.pop();
+            let b = osvm.stack.pop();
+            let add = match (a, b) {
+                (Some(x), Some(y)) => Some(y / x),
                 _ => None,
             };
 
@@ -59,6 +98,15 @@ fn main() {
         inst_push(69),
         inst_push(420),
         inst_plus(),
+        inst_push(420),
+        inst_push(69),
+        inst_minus(),
+        inst_push(82),
+        inst_push(300),
+        inst_mult(),
+        inst_push(20),
+        inst_push(10),
+        inst_div(),
     ];
 
     for i in 0..program.len() {
