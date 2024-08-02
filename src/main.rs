@@ -1,5 +1,5 @@
 mod error;
-use std::usize;
+use std::{process::exit, usize, vec};
 
 use error::*;
 
@@ -12,11 +12,13 @@ struct OSVM {
     stack: Vec<usize>,
 }
 
+#[derive(Clone)]
 enum InstType {
     Push,
     Plus,
 }
 
+#[derive(Clone)]
 struct Inst {
     itype: InstType,
     operand: Word,
@@ -66,7 +68,7 @@ fn osvm_execute_inst(osvm: &mut OSVM, inst: Inst) -> Err {
 fn osvm_dump(osvm: &mut OSVM) {
     println!("Stack:");
     if osvm.stack.len() > 0 {
-        for i in 0..osvm.stack.len() {
+        for _i in 0..osvm.stack.len() {
             println!("  {:?}", osvm.stack);
         }
     } else {
@@ -79,11 +81,19 @@ fn main() {
         stack: Vec::with_capacity(OSVM_STACK_CAPACITY),
     };
 
-    osvm_dump(osvm);
-    osvm_execute_inst(osvm, inst_push(69));
-    osvm_dump(osvm);
-    osvm_execute_inst(osvm, inst_push(420));
-    osvm_dump(osvm);
-    osvm_execute_inst(osvm, inst_plus());
-    osvm_dump(osvm);
+    let program: Vec<Inst> = vec![
+        inst_push(69),
+        inst_push(420),
+        inst_plus(),
+    ];
+
+    for i in 0..program.len() {
+        let err: Err = osvm_execute_inst(osvm, program[i].clone());
+        if err != Err::ErrOK {
+            eprintln!("Err: {}", err_as_string(err));
+            osvm_dump(osvm);
+            exit(1);
+        }
+        osvm_dump(osvm);
+    }
 }
