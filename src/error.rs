@@ -4,6 +4,7 @@ pub enum Err {
     ErrStackOverflow,
     ErrStackUnderflow,
     ErrIllegalInst,
+    ErrIllegalInstAccess,
     ErrDivByZero,
 }
 
@@ -13,6 +14,7 @@ pub fn err_as_string(err: Err) -> String {
         Err::ErrStackOverflow => return "ErrStackOverflow".to_string(),
         Err::ErrStackUnderflow => return "ErrStackUnderflow".to_string(),
         Err::ErrIllegalInst => return "ErrIllegalInst".to_string(),
+        Err::ErrIllegalInstAccess => return "ErrIllegalInstAccess".to_string(),
         Err::ErrDivByZero => return "ErrDivByZero".to_string(),
         _ => {
             assert!(false, "err_as_string: Unreachable");

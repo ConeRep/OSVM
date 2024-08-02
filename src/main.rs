@@ -6,19 +6,32 @@ use error::*;
 use std::{process::exit, usize, vec};
 
 const OSVM_STACK_CAPACITY: usize = 1024;
+const OSVM_PROGRAM_CAPACITY: usize = 1024;
 
 #[derive(Clone)]
 struct OSVM {
     stack: Vec<usize>,
+
+    program: Vec<Inst>,
+    ip: usize,
+    
+    halt: bool,
 }
 
-fn osvm_execute_inst(osvm: &mut OSVM, inst: Inst) -> Err {
+fn osvm_execute_inst(osvm: &mut OSVM) -> Err {
+    if osvm.ip < 0 || osvm.ip >= osvm.program.len() {
+        return Err::ErrIllegalInstAccess
+    }
+
+    let inst: Inst = osvm.program[osvm.ip];
+
     match inst.itype {
         InstType::Push => {
             if osvm.stack.len() >= OSVM_STACK_CAPACITY {
                 return Err::ErrStackOverflow
             }
             osvm.stack.push(inst.operand as usize);
+            osvm.ip += 1;
         }
         InstType::Plus => {
             if osvm.stack.len() < 2 {
@@ -32,6 +45,7 @@ fn osvm_execute_inst(osvm: &mut OSVM, inst: Inst) -> Err {
             };
 
             osvm.stack.push(new_num.unwrap());
+            osvm.ip += 1;
         }
         InstType::Minus => {
             if osvm.stack.len() < 2 {
@@ -45,6 +59,7 @@ fn osvm_execute_inst(osvm: &mut OSVM, inst: Inst) -> Err {
             };
 
             osvm.stack.push(new_num.unwrap());
+            osvm.ip += 1;
         }
         InstType::Mult => {
             if osvm.stack.len() < 2 {
@@ -58,6 +73,7 @@ fn osvm_execute_inst(osvm: &mut OSVM, inst: Inst) -> Err {
             };
 
             osvm.stack.push(new_num.unwrap());
+            osvm.ip += 1;
         }
         InstType::Div => {
             if osvm.stack.len() < 2 {
@@ -77,6 +93,14 @@ fn osvm_execute_inst(osvm: &mut OSVM, inst: Inst) -> Err {
             };
 
             osvm.stack.push(new_num.unwrap());
+            osvm.ip += 1;
+        }
+        InstType::Jump => {
+            osvm.ip = inst.operand as usize;
+        }
+        InstType::Halt => {
+            osvm.ip = 0;
+            osvm.halt = true;
         }
         _ => return Err::ErrIllegalInst
     }
@@ -84,7 +108,7 @@ fn osvm_execute_inst(osvm: &mut OSVM, inst: Inst) -> Err {
     Err::ErrOK
 }
 
-fn osvm_dump(osvm: &mut OSVM) {
+fn osvm_dump_stack(osvm: &mut OSVM) {
     println!("Stack:");
     if osvm.stack.len() > 0 {
         for _i in 0..osvm.stack.len() {
@@ -95,12 +119,22 @@ fn osvm_dump(osvm: &mut OSVM) {
     }
 }
 
+fn osvm_load_program_from_memory(osvm: &mut OSVM, program: &Vec<Inst>) {
+    assert!(program.len() < OSVM_PROGRAM_CAPACITY);
+    osvm.program.extend_from_slice(program);
+}
+
 fn main() {
     let osvm: &mut OSVM = &mut OSVM {
         stack: Vec::with_capacity(OSVM_STACK_CAPACITY),
+
+        program: Vec::with_capacity(OSVM_PROGRAM_CAPACITY),
+        ip: 0,
+        
+        halt: false,
     };
 
-    let program: Vec<Inst> = vec![
+    let program: Vec<Inst> =  vec![
         inst_push(69),
         inst_push(420),
         inst_plus(),
@@ -113,12 +147,15 @@ fn main() {
         inst_push(20),
         inst_push(10),
         inst_div(),
+        inst_jmp(9),
+        inst_halt()
     ];
 
-    for i in 0..program.len() {
-        println!("\n{}", inst_type_as_string(program[i].itype.clone()));
-        let err: Err = osvm_execute_inst(osvm, program[i].clone());
-        osvm_dump(osvm);
+    osvm_load_program_from_memory(osvm, &program);
+
+    while !osvm.halt {
+        let err: Err = osvm_execute_inst(osvm);
+        osvm_dump_stack(osvm);
         if err != Err::ErrOK {
             eprintln!("Err: {}", err_as_string(err));
             exit(1);
