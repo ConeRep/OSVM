@@ -26,12 +26,12 @@ fn osvm_execute_inst(osvm: &mut OSVM, inst: Inst) -> Err {
             }
             let a = osvm.stack.pop();
             let b = osvm.stack.pop();
-            let add = match (a, b) {
+            let new_num = match (a, b) {
                 (Some(x), Some(y)) => Some(y + x),
                 _ => None,
             };
 
-            osvm.stack.push(add.unwrap());
+            osvm.stack.push(new_num.unwrap());
         }
         InstType::Minus => {
             if osvm.stack.len() < 2 {
@@ -39,12 +39,12 @@ fn osvm_execute_inst(osvm: &mut OSVM, inst: Inst) -> Err {
             }
             let a = osvm.stack.pop();
             let b = osvm.stack.pop();
-            let add = match (a, b) {
+            let new_num = match (a, b) {
                 (Some(x), Some(y)) => Some(y - x),
                 _ => None,
             };
 
-            osvm.stack.push(add.unwrap());
+            osvm.stack.push(new_num.unwrap());
         }
         InstType::Mult => {
             if osvm.stack.len() < 2 {
@@ -52,25 +52,31 @@ fn osvm_execute_inst(osvm: &mut OSVM, inst: Inst) -> Err {
             }
             let a = osvm.stack.pop();
             let b = osvm.stack.pop();
-            let add = match (a, b) {
+            let new_num = match (a, b) {
                 (Some(x), Some(y)) => Some(y * x),
                 _ => None,
             };
 
-            osvm.stack.push(add.unwrap());
+            osvm.stack.push(new_num.unwrap());
         }
         InstType::Div => {
             if osvm.stack.len() < 2 {
                 return Err::ErrStackUnderflow
             }
+
             let a = osvm.stack.pop();
             let b = osvm.stack.pop();
-            let add = match (a, b) {
+
+            if a == Some(0) || b == Some(0)   {
+                return Err::ErrDivByZero
+            }
+
+            let new_num = match (a, b) {
                 (Some(x), Some(y)) => Some(y / x),
                 _ => None,
             };
 
-            osvm.stack.push(add.unwrap());
+            osvm.stack.push(new_num.unwrap());
         }
         _ => return Err::ErrIllegalInst
     }
@@ -104,8 +110,8 @@ fn main() {
         inst_push(82),
         inst_push(300),
         inst_mult(),
-        inst_push(20),
         inst_push(10),
+        inst_push(0),
         inst_div(),
     ];
 
